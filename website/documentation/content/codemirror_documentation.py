@@ -1,5 +1,3 @@
-from collections.abc import Callable
-
 from nicegui import ui
 
 from . import doc
@@ -16,28 +14,17 @@ def main_demo() -> None:
                 on_change=lambda e: editor.set_line_wrapping(e.value))
 
 
-@doc.demo('Collaborative Editor', '''
-    Multiple users can edit the same document simultaneously.
-    A shared ``Event`` notifies all editors when the content changes.
-
-    *Since version 3.8.0:*
-    ``set_value`` applies only the modified region to preserve cursor positions.
+@doc.demo('Preserving Cursor Position', '''
+    ``set_value`` applies only the modified region, so cursor positions and selections outside the change are preserved.
+    Try editing the code below while the first line updates automatically.
 ''')
-def collaborative_editor_demo() -> Callable:
-    from nicegui import Event, events
+def preserve_cursor_demo() -> None:
+    from datetime import datetime
 
-    document = {'value': 'print("Hello, world!")'}
-    change = Event[str]()
-
-    def root():
-        def on_change(e: events.ValueChangeEventArguments) -> None:
-            document['value'] = e.value
-            change.emit(e.value)
-
-        editor = ui.codemirror(value=document['value'], on_change=on_change)
-        change.subscribe(editor.set_value)
-
-    return root
+    editor = ui.codemirror(f'# {datetime.now():%H:%M:%S}\n', language='Python')
+    ui.timer(1, lambda: editor.set_value(
+        f'# {datetime.now():%H:%M:%S}\n' + editor.value.split('\n', 1)[-1]
+    ))
 
 
 doc.reference(ui.codemirror)
